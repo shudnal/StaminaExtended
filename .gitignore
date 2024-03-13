@@ -361,3 +361,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/package/nexus
+package/thunderstore/StaminaExtended/StaminaExtended.dll
+/package/thunderstore/StaminaExtended.zip
