@@ -2,7 +2,6 @@
 using HarmonyLib;
 using System;
 using static ItemDrop;
-using static ItemDrop.ItemData;
 
 namespace StaminaExtended
 {
@@ -24,7 +23,7 @@ namespace StaminaExtended
 
         private static bool IsFoodItemForExtraStaminaRegeneration(ItemData item)
         {
-            return extraStaminaRegeneration.Value && Player.m_localPlayer != null && item.m_shared.m_itemType == ItemType.Consumable && item.m_shared.m_foodStamina > 0f;
+            return extraStaminaRegeneration.Value && Player.m_localPlayer != null && item.m_shared.m_itemType == ItemData.ItemType.Consumable && item.m_shared.m_foodStamina > 0f;
         }
 
         private static float GetAdditionalBaseStamina(Player player)
@@ -73,10 +72,11 @@ namespace StaminaExtended
         [HarmonyPatch(typeof(ItemData), nameof(ItemData.GetTooltip), new Type[] { typeof(ItemData), typeof(int), typeof(bool), typeof(float) })]
         public static class ItemDrop_ItemData_GetTooltip_StaminaRegenTooltipForFoodRegen
         {
-            public static ItemData addStaminaRegenTooltip;
+            private static string[] tooltipTokens = new string[] { "$item_food_regen", "$item_food_duration", "$item_food_eitr", "$item_food_stamina" };
 
             [HarmonyPriority(Priority.First)]
-            private static void Prefix(ItemData item)
+            [HarmonyBefore("shudnal.MyLittleUI")]
+            private static void Postfix(ItemData item, ref string __result)
             {
                 if (!modEnabled.Value)
                     return;
@@ -84,31 +84,26 @@ namespace StaminaExtended
                 if (!IsFoodItemForExtraStaminaRegeneration(item))
                     return;
 
-                addStaminaRegenTooltip = item;
-            }
+                int index = -1;
+                foreach (string tailString in tooltipTokens)
+                {
+                    index = __result.IndexOf(tailString, StringComparison.InvariantCulture);
+                    if (index != -1)
+                        break;
+                }
 
-            [HarmonyPriority(Priority.First)]
-            private static void Postfix()
-            {
-                addStaminaRegenTooltip = null;
-            }
-        }
-
-        [HarmonyPatch(typeof(ItemData), nameof(ItemData.GetStatusEffectTooltip))]
-        public static class ItemDrop_ItemData_GetStatusEffectTooltip_StaminaRegenTooltipForFoodRegen
-        {
-            [HarmonyPriority(Priority.First)]
-            private static void Prefix(ItemData __instance)
-            {
-                if (!modEnabled.Value)
+                if (index == -1)
                     return;
 
-                if (__instance != ItemDrop_ItemData_GetTooltip_StaminaRegenTooltipForFoodRegen.addStaminaRegenTooltip)
-                    return;
-
-                m_stringBuilder.AppendFormat("\n$se_staminaregen: <color=#ffff80ff>{0:P1}</color> ($item_current:<color=yellow>{1:P1}</color>)",
-                                                GetStaminaRegenerationValueFromStaminaPoints(__instance.m_shared.m_foodStamina),
+                string tooltip = String.Format("\n$se_staminaregen: <color=#ffff80ff>{0:P1}</color> ($item_current:<color=yellow>{1:P1}</color>)",
+                                                GetStaminaRegenerationValueFromStaminaPoints(item.m_shared.m_foodStamina),
                                                 GetMultiplier(Player.m_localPlayer));
+
+                int i = __result.IndexOf("\n", index, StringComparison.InvariantCulture);
+                if (i != -1)
+                    __result.Insert(i, tooltip);
+                else
+                    __result += tooltip;
             }
         }
 
