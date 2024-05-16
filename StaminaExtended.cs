@@ -514,7 +514,7 @@ namespace StaminaExtended
 
             public static bool IsEnemyInRange(Character me)
             {
-                foreach (BaseAI instance in BaseAI.Instances)
+                foreach (BaseAI instance in BaseAI.BaseAIInstances)
                 {
                     if (!BaseAI.IsEnemy(me, instance.m_character))
                         continue;

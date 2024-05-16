@@ -33,7 +33,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <LangVersion>8.0</LangVersion>
-  </PropertyGroup>  
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="ExtraStamina.cs" />
     <Compile Include="SurfaceStaminaSpeed.cs" />
