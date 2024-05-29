@@ -12,7 +12,7 @@ namespace StaminaExtended
     {
         const string pluginID = "shudnal.StaminaExtended";
         const string pluginName = "Stamina Extended";
-        const string pluginVersion = "1.0.1";
+        const string pluginVersion = "1.0.2";
 
         private readonly Harmony harmony = new Harmony(pluginID);
 
@@ -142,6 +142,18 @@ namespace StaminaExtended
         public static ConfigEntry<float> groundsStaminaRegenPaved;
         public static ConfigEntry<string> groundsNamePaved;
 
+        public static ConfigEntry<float> groundsSpeedAsh;
+        public static ConfigEntry<float> groundsJumpAsh;
+        public static ConfigEntry<float> groundsStaminaDrainAsh;
+        public static ConfigEntry<float> groundsStaminaRegenAsh;
+        public static ConfigEntry<string> groundsNameAsh;
+
+        public static ConfigEntry<float> groundsSpeedLava;
+        public static ConfigEntry<float> groundsJumpLava;
+        public static ConfigEntry<float> groundsStaminaDrainLava;
+        public static ConfigEntry<float> groundsStaminaRegenLava;
+        public static ConfigEntry<string> groundsNameLava;
+
         public static StaminaExtended instance;
 
         public const string statusEffectSurfaceName = "Surface";
@@ -253,11 +265,11 @@ namespace StaminaExtended
             groundsStaminaRegenSnow = config("Grounds - Snow", "Stamina regen multiplier", 1f, "Stamina regen multiplier");
             groundsNameSnow = config("Grounds - Snow", "Status effect name", "Snow", "Localized name for status effect");
 
-            groundsSpeedMud = config("Grounds - Mud", "Speed multiplier", 1f, "Movement speed multiplier (swamps)");
-            groundsJumpMud = config("Grounds - Mud", "Jump multiplier", 1f, "Jump height multiplier");
-            groundsStaminaDrainMud = config("Grounds - Mud", "Stamina drain multiplier", 1f, "Stamina drain multiplier (swamps)");
-            groundsStaminaRegenMud = config("Grounds - Mud", "Stamina regen multiplier", 1f, "Stamina regen multiplier");
-            groundsNameMud = config("Grounds - Mud", "Status effect name", "Mud", "Localized name for status effect (swamps)");
+            groundsSpeedMud = config("Grounds - Mud", "Speed multiplier", 1f, "Movement speed multiplier (swamps ground)");
+            groundsJumpMud = config("Grounds - Mud", "Jump multiplier", 1f, "Jump height multiplier (swamps ground)");
+            groundsStaminaDrainMud = config("Grounds - Mud", "Stamina drain multiplier", 1f, "Stamina drain multiplier (swamps ground)");
+            groundsStaminaRegenMud = config("Grounds - Mud", "Stamina regen multiplier", 1f, "Stamina regen multiplier (swamps ground)");
+            groundsNameMud = config("Grounds - Mud", "Status effect name", "Mud", "Localized name for status effect (swamps ground)");
 
             groundsSpeedGrass = config("Grounds - Grass", "Speed multiplier", 1f, "Movement speed multiplier (meadows and black forest)");
             groundsJumpGrass = config("Grounds - Grass", "Jump multiplier", 1f, "Jump height multiplier");
@@ -283,11 +295,11 @@ namespace StaminaExtended
             groundsStaminaRegenStone = config("Grounds - Stone", "Stamina regen multiplier", 1f, "Stamina regen multiplier");
             groundsNameStone = config("Grounds - Stone", "Status effect name", "Stone", "Localized name for status effect");
 
-            groundsSpeedMarble = config("Grounds - Marble", "Speed multiplier", 1.3f, "Movement speed multiplier");
-            groundsJumpMarble = config("Grounds - Marble", "Jump multiplier", 1.1f, "Jump height multiplier");
-            groundsStaminaDrainMarble = config("Grounds - Marble", "Stamina drain multiplier", 0.75f, "Stamina drain multiplier");
-            groundsStaminaRegenMarble = config("Grounds - Marble", "Stamina regen multiplier", 1f, "Stamina regen multiplier");
-            groundsNameMarble = config("Grounds - Marble", "Status effect name", "Marble", "Localized name for status effect");
+            groundsSpeedMarble = config("Grounds - Marble", "Speed multiplier", 1.3f, "Movement speed multiplier (dverger marble, ashstone and ancient)");
+            groundsJumpMarble = config("Grounds - Marble", "Jump multiplier", 1.1f, "Jump height multiplier (dverger marble, ashstone and ancient)");
+            groundsStaminaDrainMarble = config("Grounds - Marble", "Stamina drain multiplier", 0.75f, "Stamina drain multiplier (dverger marble, ashstone and ancient)");
+            groundsStaminaRegenMarble = config("Grounds - Marble", "Stamina regen multiplier", 1f, "Stamina regen multiplier (dverger marble, ashstone and ancient)");
+            groundsNameMarble = config("Grounds - Marble", "Status effect name", "Marble", "Localized name for status effect (dverger marble, ashstone and ancient)");
 
             groundsSpeedMetal = config("Grounds - Metal", "Speed multiplier", 1.25f, "Movement speed multiplier");
             groundsJumpMetal = config("Grounds - Metal", "Jump multiplier", 1.05f, "Jump height multiplier");
@@ -312,6 +324,18 @@ namespace StaminaExtended
             groundsStaminaDrainPaved = config("Grounds - Paved", "Stamina drain multiplier", 0.85f, "Stamina drain multiplier");
             groundsStaminaRegenPaved = config("Grounds - Paved", "Stamina regen multiplier", 1f, "Stamina regen multiplier");
             groundsNamePaved = config("Grounds - Paved", "Status effect name", "Paved", "Localized name for status effect");
+
+            groundsSpeedAsh = config("Grounds - Ash", "Speed multiplier", 1f, "Movement speed multiplier (Ashlands ground)");
+            groundsJumpAsh = config("Grounds - Ash", "Jump multiplier", 1f, "Jump height multiplier (Ashlands ground)");
+            groundsStaminaDrainAsh = config("Grounds - Ash", "Stamina drain multiplier", 1f, "Stamina drain multiplier (Ashlands ground)");
+            groundsStaminaRegenAsh = config("Grounds - Ash", "Stamina regen multiplier", 1f, "Stamina regen multiplier (Ashlands ground)");
+            groundsNameAsh = config("Grounds - Ash", "Status effect name", "Ash", "Localized name for status effect (Ashlands ground)");
+
+            groundsSpeedLava = config("Grounds - Lava", "Speed multiplier", 1f, "Movement speed multiplier (lava in Ashlands)");
+            groundsJumpLava = config("Grounds - Lava", "Jump multiplier", 1f, "Jump height multiplier (lava in Ashlands)");
+            groundsStaminaDrainLava = config("Grounds - Lava", "Stamina drain multiplier", 1f, "Stamina drain multiplier (lava in Ashlands)");
+            groundsStaminaRegenLava = config("Grounds - Lava", "Stamina regen multiplier", 1f, "Stamina regen multiplier (lava in Ashlands)");
+            groundsNameLava = config("Grounds - Lava", "Status effect name", "Lava", "Localized name for status effect (lava in Ashlands)");
         }
 
         ConfigEntry<T> config<T>(string group, string name, T defaultValue, ConfigDescription description, bool synchronizedSetting = true)

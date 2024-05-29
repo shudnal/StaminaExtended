@@ -108,7 +108,9 @@ namespace StaminaExtended
             Metal,
             Cultivated,
             Cleared,
-            Paved
+            Paved,
+            Ash,
+            Lava,
         }
 
         public static SurfaceMaterial currentSurface = SurfaceMaterial.None;
@@ -120,7 +122,10 @@ namespace StaminaExtended
         private static bool IsUpgradedMaterial(Collider collider)
         {
             WearNTear componentInParent = GetPiece(collider);
-            return componentInParent != null && (componentInParent.m_materialType == MaterialType.HardWood || componentInParent.m_materialType == MaterialType.Marble);
+            return componentInParent != null && (componentInParent.m_materialType == MaterialType.HardWood || 
+                                                 componentInParent.m_materialType == MaterialType.Marble || 
+                                                 componentInParent.m_materialType == MaterialType.Ashstone || 
+                                                 componentInParent.m_materialType == MaterialType.Ancient);
         }
 
         private static WearNTear GetPiece(Collider collider)
@@ -217,6 +222,8 @@ namespace StaminaExtended
                 MaterialType.Marble => SurfaceMaterial.Marble,
                 MaterialType.HardWood => SurfaceMaterial.HardWood,
                 MaterialType.Iron => SurfaceMaterial.Metal,
+                MaterialType.Ashstone => SurfaceMaterial.Marble,
+                MaterialType.Ancient => SurfaceMaterial.Marble,
                 _ => SurfaceMaterial.None
             };
         }
@@ -246,6 +253,12 @@ namespace StaminaExtended
                     case GroundMaterial.Tar:
                         currentSurface = SurfaceMaterial.None;
                         return;
+                    case GroundMaterial.Ashlands:
+                        currentSurface = SurfaceMaterial.Ash;
+                        return;
+                    case GroundMaterial.Lava:
+                        currentSurface = SurfaceMaterial.Lava;
+                        return;
                     case GroundMaterial.Snow:
                         currentSurface = SurfaceMaterial.Snow;
                         return;
@@ -272,6 +285,11 @@ namespace StaminaExtended
                         currentSurface = GetModifiedGround(collider, point);
                         if (currentSurface == SurfaceMaterial.None && IsPlainsGrass())
                             currentSurface = SurfaceMaterial.Grass;
+                        return;
+                    case GroundMaterial.Default:
+                        WearNTear componentInParent = GetPiece(collider);
+                        if (componentInParent != null)
+                            currentSurface = GetSurfaceMaterial(componentInParent.m_materialType);
                         return;
                 }
 

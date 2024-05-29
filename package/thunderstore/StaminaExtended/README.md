@@ -108,11 +108,13 @@ Detected surfaces:
 * Wood (basic wooden structures)
 * Hard wood (core and dark wood)
 * Stone
-* Marble
+* Marble (also Ashstone and Ancient)
 * Metal
 * Cultivated ground
 * Cleared ground
 * Paved ground
+* Ash (Ashlands ground)
+* Lava
 
 Detection point is a point where you foot touching the ground. Detection happens only when foot touches the ground. 
 
