@@ -1,3 +1,6 @@
+# 1.0.3
+* bog witch patch
+
 # 1.0.2
 * Ash and Lava ground modifiers
 

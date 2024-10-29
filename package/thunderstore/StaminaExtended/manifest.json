@@ -1,6 +1,6 @@
 {
   "name": "StaminaExtended",
-  "version_number": "1.0.2",
+  "version_number": "1.0.3",
   "website_url": "https://github.com/shudnal/StaminaExtended",
   "description": "Control various stamina aspects. Linear regeneration change, more regen from extra stamina. Encumbered, swim, sneaking tweaks. Surface dependent stamina usage and movement speed.",
   "dependencies": ["denikson-BepInExPack_Valheim-5.4.2202"]

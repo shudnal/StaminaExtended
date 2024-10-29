@@ -69,7 +69,7 @@ namespace StaminaExtended
             }
         }
 
-        [HarmonyPatch(typeof(ItemData), nameof(ItemData.GetTooltip), new Type[] { typeof(ItemData), typeof(int), typeof(bool), typeof(float) })]
+        [HarmonyPatch(typeof(ItemData), nameof(ItemData.GetTooltip), typeof(ItemData), typeof(int), typeof(bool), typeof(float), typeof(int))]
         public static class ItemDrop_ItemData_GetTooltip_StaminaRegenTooltipForFoodRegen
         {
             private static string[] tooltipTokens = new string[] { "$item_food_regen", "$item_food_duration", "$item_food_eitr", "$item_food_stamina" };
