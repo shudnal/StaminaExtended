@@ -21,9 +21,17 @@ namespace StaminaExtended
             return (extraStaminaRegenerationPercent.Value / 100f) * (points) / extraStaminaRegenerationPoints.Value;
         }
 
-        private static bool IsFoodItemForExtraStaminaRegeneration(ItemData item)
+        private static bool IsFoodItemForExtraStaminaRegeneration(ItemData item, out float foodStamina)
         {
-            return extraStaminaRegeneration.Value && Player.m_localPlayer != null && item.m_shared.m_itemType == ItemData.ItemType.Consumable && item.m_shared.m_foodStamina > 0f;
+            foodStamina = 0f;
+
+            if (!extraStaminaRegeneration.Value || Player.m_localPlayer == null)
+                return false;
+
+            if (item.m_shared.m_itemType == ItemData.ItemType.Consumable)
+                foodStamina = item.m_shared.m_foodStamina;
+
+            return foodStamina > 0 || item.m_shared.m_appendToolTip != null && IsFoodItemForExtraStaminaRegeneration(item.m_shared.m_appendToolTip.m_itemData, out foodStamina);
         }
 
         private static float GetAdditionalBaseStamina(Player player)
@@ -81,7 +89,7 @@ namespace StaminaExtended
                 if (!modEnabled.Value)
                     return;
 
-                if (!IsFoodItemForExtraStaminaRegeneration(item))
+                if (!IsFoodItemForExtraStaminaRegeneration(item, out float foodStamina))
                     return;
 
                 int index = -1;
@@ -96,7 +104,7 @@ namespace StaminaExtended
                     return;
 
                 string tooltip = String.Format("\n$se_staminaregen: <color=#ffff80ff>{0:P1}</color> ($item_current:<color=yellow>{1:P1}</color>)",
-                                                GetStaminaRegenerationValueFromStaminaPoints(item.m_shared.m_foodStamina),
+                                                GetStaminaRegenerationValueFromStaminaPoints(foodStamina),
                                                 GetMultiplier(Player.m_localPlayer));
 
                 int i = __result.IndexOf("\n", index, StringComparison.InvariantCulture);

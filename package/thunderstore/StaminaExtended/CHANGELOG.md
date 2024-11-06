@@ -1,3 +1,6 @@
+# 1.0.4
+* feast stamina regeneration tooltip
+
 # 1.0.3
 * bog witch patch
 
