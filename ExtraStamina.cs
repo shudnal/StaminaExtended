@@ -43,7 +43,8 @@ namespace StaminaExtended
                    player.GetSkillFactor(Skills.SkillType.Swim) * swimBaseStaminaIncrease.Value +
                    player.GetSkillFactor(Skills.SkillType.Fishing) * fishingBaseStaminaIncrease.Value +
                    player.GetSkillFactor(Skills.SkillType.Sneak) * sneakBaseStaminaIncrease.Value +
-                   player.GetSkillFactor(Skills.SkillType.Jump) * jumpBaseStaminaIncrease.Value;
+                   player.GetSkillFactor(Skills.SkillType.Jump) * jumpBaseStaminaIncrease.Value +
+                   player.GetSkillFactor(Skills.SkillType.Unarmed) * handsBaseStaminaIncrease.Value;
         }
 
         [HarmonyPatch(typeof(Player), nameof(Player.GetTotalFoodValue))]

@@ -1,3 +1,6 @@
+# 1.0.5
+* unarmed base stamina scale
+
 # 1.0.4
 * feast stamina regeneration tooltip
 

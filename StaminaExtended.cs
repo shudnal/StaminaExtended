@@ -12,7 +12,7 @@ namespace StaminaExtended
     {
         const string pluginID = "shudnal.StaminaExtended";
         const string pluginName = "Stamina Extended";
-        const string pluginVersion = "1.0.4";
+        const string pluginVersion = "1.0.5";
 
         private readonly Harmony harmony = new Harmony(pluginID);
 
@@ -57,6 +57,7 @@ namespace StaminaExtended
         public static ConfigEntry<float> fishingBaseStaminaIncrease;
         public static ConfigEntry<float> sneakBaseStaminaIncrease;
         public static ConfigEntry<float> jumpBaseStaminaIncrease;
+        public static ConfigEntry<float> handsBaseStaminaIncrease;
 
         public static ConfigEntry<float> pullStaminaUse;
         public static ConfigEntry<float> hookedStaminaPerSec;
@@ -237,6 +238,7 @@ namespace StaminaExtended
             fishingBaseStaminaIncrease = config("7 - Base stamina", "Fishing", 20f, "Base stamina will be increased by set value when Fishing skill is level 100");
             sneakBaseStaminaIncrease = config("7 - Base stamina", "Sneak", 20f, "Base stamina will be increased by set value when Sneak skill is level 100");
             jumpBaseStaminaIncrease = config("7 - Base stamina", "Jump", 20f, "Base stamina will be increased by set value when Jump skill is level 100");
+            handsBaseStaminaIncrease = config("7 - Base stamina", "Unarmed", 0f, "Base stamina will be increased by set value when Unarmed skill is level 100");
 
             pullStaminaUse = config("8 - Various multipliers", "Fishing pull stamina", 1f, "Stamina required to reel");
             hookedStaminaPerSec = config("8 - Various multipliers", "Fishing hooked stamina", 1f, "Stamina required to keep a fish on the line");
