@@ -251,8 +251,8 @@ namespace StaminaExtended
 
             hideStaminaValue = config("9 - Misc", "Hide stamina text", false, "Hide stamina text value on stamina bar");
             blockStaminaSkill = config("9 - Misc", "Block stamina usage depends on skill", true, "Amount of stamina needed to block is reduced by 33% when Block skill is 100");
-            dodgeStaminaSkill = config("9 - Misc", "Dodge stamina usage depends on Jump skill", true, "Amount of stamina needed to block is reduced by 33% when Jump skill is 100");
-            jumpStaminaSkill = config("9 - Misc", "Jump stamina usage depends on Jump skill", true, "Amount of stamina needed to block is reduced by 33% when Jump skill is 100");
+            dodgeStaminaSkill = config("9 - Misc", "Dodge stamina usage depends on Jump skill", true, "Amount of stamina needed to dodge is reduced by 33% when Dodge skill is 100");
+            jumpStaminaSkill = config("9 - Misc", "Jump stamina usage depends on Jump skill", true, "Amount of stamina needed to jump is reduced by 33% when Jump skill is 100");
 
             groundsEnabled = config("Grounds", "Enabled", true, "Enable change of movement speed, run, jump and dodge stamina consumption on different surfaces");
             groundsShowStatusEffect = config("Grounds", "Show status effect", false, "Show status effect of current surface. Status effect will still be shown in Raven menu if disabled.");
