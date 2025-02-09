@@ -1,3 +1,8 @@
+# 1.0.6
+* fix for extra stamina regeneration not applied in certain scenarios
+* little text tweaks
+* configurable blocking stamina regeneration rate
+
 # 1.0.5
 * unarmed base stamina scale
 

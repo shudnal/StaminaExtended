@@ -1,6 +1,6 @@
 # Stamina Extended
 
-Control various stamina aspects. Linear regeneration change, more regen from extra stamina. Encumbered, swim, sneaking tweaks. Surface dependent stamina usage and movement speed.
+Control various stamina aspects. Linear regeneration rate change, more regen from extra stamina. Encumbered, swim, sneaking tweaks. Surface dependent stamina usage and movement speed.
 
 ## Linear regeneration rate change
 
@@ -23,13 +23,13 @@ For example using default values (multiplier 3.0, threshold 0.5):
 
 Tired of late game big stamina pool regenerating rate is as low as on day 1?
 
-Make extra stamina points increase overall regeneration rate.
+Makes extra stamina points increase overall regeneration rate.
 
 Default config is 1% of regeneration rate per every 10 points of extra stamina (gained from any source like food, enchants, jewels or any other source of stamina increase outside of base stamina).
 
 You can limit the calculation of extra stamina so it takes into account stamina from food only.
 
-Default config of 1% regeneration rate per 10 extra points means you will have 25% stamina regeneration rate if you have 250 stamina from best stamina food combination.
+Default config of 1% regeneration rate per 10 extra points means you will have 25% stamina regeneration rate if you have 250 stamina from your food.
 That way you can still use Medium stamina mead instead of Lingering stamina mead.
 
 Regeneration rate will be shown in the food tooltip and in the Raven menu in Status effects section.

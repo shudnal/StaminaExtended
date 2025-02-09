@@ -3,16 +3,20 @@ using BepInEx.Configuration;
 using HarmonyLib;
 using ServerSync;
 using System;
+using System.Collections.Generic;
+using System.Reflection.Emit;
+using System.Reflection;
 using UnityEngine;
+using System.Linq;
 
 namespace StaminaExtended
 {
     [BepInPlugin(pluginID, pluginName, pluginVersion)]
     public class StaminaExtended : BaseUnityPlugin
     {
-        const string pluginID = "shudnal.StaminaExtended";
-        const string pluginName = "Stamina Extended";
-        const string pluginVersion = "1.0.5";
+        public const string pluginID = "shudnal.StaminaExtended";
+        public const string pluginName = "Stamina Extended";
+        public const string pluginVersion = "1.0.6";
 
         private readonly Harmony harmony = new Harmony(pluginID);
 
@@ -72,6 +76,7 @@ namespace StaminaExtended
         public static ConfigEntry<bool> blockStaminaSkill;
         public static ConfigEntry<bool> dodgeStaminaSkill;
         public static ConfigEntry<bool> jumpStaminaSkill;
+        public static ConfigEntry<float> blockStaminaRegen;
 
         public static ConfigEntry<bool> groundsEnabled;
         public static ConfigEntry<bool> groundsShowStatusEffect;
@@ -160,7 +165,7 @@ namespace StaminaExtended
         public const string statusEffectSurfaceName = "Surface";
         public static int statusEffectSurfaceHash = statusEffectSurfaceName.GetStableHashCode();
 
-        void Awake()
+        private void Awake()
         {
             harmony.PatchAll();
             instance = this;
@@ -181,11 +186,9 @@ namespace StaminaExtended
                 player.GetSEMan().AddStatusEffect(statusEffectSurfaceHash);
             else if (!groundsEnabled.Value && player.GetSEMan().HaveStatusEffect(statusEffectSurfaceHash))
                 player.GetSEMan().RemoveStatusEffect(statusEffectSurfaceHash, quiet: true);
-
         }
 
-
-        void OnDestroy()
+        private void OnDestroy()
         {
             harmony?.UnpatchSelf();
             instance = null;
@@ -253,6 +256,7 @@ namespace StaminaExtended
             blockStaminaSkill = config("9 - Misc", "Block stamina usage depends on skill", true, "Amount of stamina needed to block is reduced by 33% when Block skill is 100");
             dodgeStaminaSkill = config("9 - Misc", "Dodge stamina usage depends on Jump skill", true, "Amount of stamina needed to dodge is reduced by 33% when Dodge skill is 100");
             jumpStaminaSkill = config("9 - Misc", "Jump stamina usage depends on Jump skill", true, "Amount of stamina needed to jump is reduced by 33% when Jump skill is 100");
+            blockStaminaRegen = config("9 - Misc", "Stamina regen multiplier while blocking", 0.8f, "Stamina regeneration rate while holding block");
 
             groundsEnabled = config("Grounds", "Enabled", true, "Enable change of movement speed, run, jump and dodge stamina consumption on different surfaces");
             groundsShowStatusEffect = config("Grounds", "Show status effect", false, "Show status effect of current surface. Status effect will still be shown in Raven menu if disabled.");
@@ -374,11 +378,14 @@ namespace StaminaExtended
             return (GetType().GetField(fieldName).GetValue(this) as ConfigEntry<float>).Value;
         }
 
-        [HarmonyPatch(typeof(Player), nameof(Player.UpdateStats), new Type[] { typeof(float) })]
+        [HarmonyPatch(typeof(Player), nameof(Player.UpdateStats), typeof(float))]
         public static class Player_UpdateStats_StaminaRegenMultiplier
         {
             private static float _m_encumberedStaminaDrain;
             private static float _m_staminaRegenTimeMultiplier;
+            private static float _m_staminaRegen;
+            private static float _blockStaminaRegen = 0.8f;
+
 
             [HarmonyPriority(Priority.VeryLow)]
             public static void Prefix(Player __instance, float dt)
@@ -390,12 +397,13 @@ namespace StaminaExtended
                     return;
 
                 _m_staminaRegenTimeMultiplier = __instance.m_staminaRegenTimeMultiplier;
+                _m_staminaRegen = __instance.m_staminaRegen;
 
                 if (extraStaminaRegeneration.Value && extraStaminaRegenerationPercent.Value > 0f && extraStaminaRegenerationPoints.Value > 0)
-                    __instance.m_staminaRegenTimeMultiplier += ExtraStamina.GetMultiplier(__instance);
+                    __instance.m_staminaRegen *= 1f + ExtraStamina.GetMultiplier(__instance);
 
                 if (sneakingStamina.Value && __instance.IsSneaking())
-                    __instance.m_staminaRegenTimeMultiplier += sneakingStaminaRegenerationMultiplier.Value * __instance.m_skills.GetSkillFactor(Skills.SkillType.Sneak);
+                    __instance.m_staminaRegen *= 1f + sneakingStaminaRegenerationMultiplier.Value * __instance.m_skills.GetSkillFactor(Skills.SkillType.Sneak);
 
                 if (linearRegeneration.Value && 0f < linearRegenerationThreshold.Value && linearRegenerationThreshold.Value < 1f && linearRegenerationMultiplier.Value > 0f && __instance.GetMaxStamina() != 0f)
                 {
@@ -422,6 +430,28 @@ namespace StaminaExtended
                 }
             }
 
+            public static void Prefix() => _blockStaminaRegen = blockStaminaRegen.Value;
+
+            [HarmonyTranspiler]
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
+            {
+                var codes = new List<CodeInstruction>(instructions);
+
+                MethodInfo isBlockingMethod = AccessTools.Method(typeof(Player), nameof(Player.IsBlocking));
+                FieldInfo customMultiplierField = AccessTools.Field(typeof(Player_UpdateStats_StaminaRegenMultiplier), "_blockStaminaRegen");
+
+                for (int i = 0; i < codes.Count - 1; i++)
+                {
+                    if (codes[i].opcode == OpCodes.Ldc_R4 && (float)codes[i].operand == 0.8f)
+                    {
+                        codes[i] = new CodeInstruction(OpCodes.Ldsfld, customMultiplierField);
+                        break;
+                    }
+                }
+
+                return codes.AsEnumerable();
+            }
+
             [HarmonyPriority(Priority.VeryHigh)]
             public static void Postfix(Player __instance)
             {
@@ -433,6 +463,9 @@ namespace StaminaExtended
 
                 if (__instance.m_encumberedStaminaDrain != _m_encumberedStaminaDrain && _m_encumberedStaminaDrain != 0f)
                     __instance.m_encumberedStaminaDrain = _m_encumberedStaminaDrain;
+
+                if (__instance.m_staminaRegen != _m_staminaRegen && _m_staminaRegen != 0f)
+                    __instance.m_staminaRegen = _m_staminaRegen;
             }
         }
 
@@ -763,6 +796,5 @@ namespace StaminaExtended
                     __instance.m_jumpStaminaUsage = __state;
             }
         }
-
     }
 }
