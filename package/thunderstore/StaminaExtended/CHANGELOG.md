@@ -1,3 +1,7 @@
+# 1.0.7
+* out of combat configurable stamina usage for sneaking, running, jumping and dodging
+* configurable stamina drain on perfect parry
+
 # 1.0.6
 * fix for extra stamina regeneration not applied in certain scenarios
 * little text tweaks

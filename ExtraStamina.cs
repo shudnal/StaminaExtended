@@ -39,12 +39,17 @@ namespace StaminaExtended
             if (!baseStamina.Value)
                 return 0f;
 
-            return player.GetSkillFactor(Skills.SkillType.Run) * runBaseStaminaIncrease.Value +
-                   player.GetSkillFactor(Skills.SkillType.Swim) * swimBaseStaminaIncrease.Value +
-                   player.GetSkillFactor(Skills.SkillType.Fishing) * fishingBaseStaminaIncrease.Value +
-                   player.GetSkillFactor(Skills.SkillType.Sneak) * sneakBaseStaminaIncrease.Value +
-                   player.GetSkillFactor(Skills.SkillType.Jump) * jumpBaseStaminaIncrease.Value +
-                   player.GetSkillFactor(Skills.SkillType.Unarmed) * handsBaseStaminaIncrease.Value;
+            return GetSkillFactor(player, Skills.SkillType.Run) * runBaseStaminaIncrease.Value +
+                   GetSkillFactor(player, Skills.SkillType.Swim) * swimBaseStaminaIncrease.Value +
+                   GetSkillFactor(player, Skills.SkillType.Fishing) * fishingBaseStaminaIncrease.Value +
+                   GetSkillFactor(player, Skills.SkillType.Sneak) * sneakBaseStaminaIncrease.Value +
+                   GetSkillFactor(player, Skills.SkillType.Jump) * jumpBaseStaminaIncrease.Value +
+                   GetSkillFactor(player, Skills.SkillType.Unarmed) * handsBaseStaminaIncrease.Value;
+        }
+
+        public static float GetSkillFactor(Player player, Skills.SkillType skillType)
+        {
+            return player.GetSkills().m_skillData.ContainsKey(skillType) ? player.GetSkillFactor(skillType) : 0f;
         }
 
         [HarmonyPatch(typeof(Player), nameof(Player.GetTotalFoodValue))]
@@ -104,7 +109,7 @@ namespace StaminaExtended
                 if (index == -1)
                     return;
 
-                string tooltip = String.Format("\n$se_staminaregen: <color=#ffff80ff>{0:P1}</color> ($item_current:<color=yellow>{1:P1}</color>)",
+                string tooltip = string.Format("\n$se_staminaregen: <color=#ffff80ff>{0:P1}</color> ($item_current:<color=yellow>{1:P1}</color>)",
                                                 GetStaminaRegenerationValueFromStaminaPoints(foodStamina),
                                                 GetMultiplier(Player.m_localPlayer));
 
@@ -134,6 +139,5 @@ namespace StaminaExtended
                 __instance.m_texts[0].m_text += Localization.instance.Localize($"\n$se_staminaregen ({(extraStaminaRegenerationOnlyFood.Value ? "$item_food" : "$hud_misc")}): <color=orange>{multiplier:P1}</color>");
             }
         }
-
     }
 }

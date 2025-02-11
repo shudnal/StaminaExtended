@@ -85,6 +85,14 @@ Set stamina drain by various actions:
 * Dodge
 * Jump
 
+### Out of combat multipliers
+
+Reduce stamina drain if out of combat (not targeted and sensed by enemy and not attacking):
+* Running
+* Jumping
+* Dodging
+* Sneaking (if sneaking stamina config is enabled and no enemy is near it's 0 drain, otherwise this multiplier)
+
 ## Misc settings
 
 Hide stamina numeric value shown on the bar.

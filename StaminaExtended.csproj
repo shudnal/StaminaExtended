@@ -36,6 +36,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="ExtraStamina.cs" />
+    <Compile Include="StaminaMultipliers.cs" />
     <Compile Include="SurfaceStaminaSpeed.cs" />
     <Compile Include="StaminaExtended.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -2,12 +2,6 @@
 using BepInEx.Configuration;
 using HarmonyLib;
 using ServerSync;
-using System;
-using System.Collections.Generic;
-using System.Reflection.Emit;
-using System.Reflection;
-using UnityEngine;
-using System.Linq;
 
 namespace StaminaExtended
 {
@@ -16,7 +10,7 @@ namespace StaminaExtended
     {
         public const string pluginID = "shudnal.StaminaExtended";
         public const string pluginName = "Stamina Extended";
-        public const string pluginVersion = "1.0.6";
+        public const string pluginVersion = "1.0.7";
 
         private readonly Harmony harmony = new Harmony(pluginID);
 
@@ -72,11 +66,17 @@ namespace StaminaExtended
         public static ConfigEntry<float> dodgeStaminaUsage;
         public static ConfigEntry<float> jumpStaminaUsage;
 
+        public static ConfigEntry<float> sneakingStaminaUsageOutOfCombat;
+        public static ConfigEntry<float> runStaminaDrainOutOfCombat;
+        public static ConfigEntry<float> dodgeStaminaUsageOutOfCombat;
+        public static ConfigEntry<float> jumpStaminaUsageOutOfCombat;
+
         public static ConfigEntry<bool> hideStaminaValue;
         public static ConfigEntry<bool> blockStaminaSkill;
         public static ConfigEntry<bool> dodgeStaminaSkill;
         public static ConfigEntry<bool> jumpStaminaSkill;
         public static ConfigEntry<float> blockStaminaRegen;
+        public static ConfigEntry<float> perfectParryStaminaDrain;
 
         public static ConfigEntry<bool> groundsEnabled;
         public static ConfigEntry<bool> groundsShowStatusEffect;
@@ -252,11 +252,17 @@ namespace StaminaExtended
             dodgeStaminaUsage = config("8 - Various multipliers", "Dodge stamina usage", 1f, "Stamina required to dodge");
             jumpStaminaUsage = config("8 - Various multipliers", "Jump stamina usage", 1f, "Stamina required to jump");
 
+            runStaminaDrainOutOfCombat = config("8 - Various multipliers - Out of combat", "Run stamina drain", 1f, "Stamina required to run");
+            dodgeStaminaUsageOutOfCombat = config("8 - Various multipliers - Out of combat", "Dodge stamina usage", 1f, "Stamina required to dodge");
+            jumpStaminaUsageOutOfCombat = config("8 - Various multipliers - Out of combat", "Jump stamina usage", 1f, "Stamina required to jump");
+            sneakingStaminaUsageOutOfCombat = config("8 - Various multipliers - Out of combat", "Sneak stamina usage", 1f, "Stamina required to sneak");
+
             hideStaminaValue = config("9 - Misc", "Hide stamina text", false, "Hide stamina text value on stamina bar");
             blockStaminaSkill = config("9 - Misc", "Block stamina usage depends on skill", true, "Amount of stamina needed to block is reduced by 33% when Block skill is 100");
             dodgeStaminaSkill = config("9 - Misc", "Dodge stamina usage depends on Jump skill", true, "Amount of stamina needed to dodge is reduced by 33% when Dodge skill is 100");
             jumpStaminaSkill = config("9 - Misc", "Jump stamina usage depends on Jump skill", true, "Amount of stamina needed to jump is reduced by 33% when Jump skill is 100");
             blockStaminaRegen = config("9 - Misc", "Stamina regen multiplier while blocking", 0.8f, "Stamina regeneration rate while holding block");
+            perfectParryStaminaDrain = config("9 - Misc", "Stamina usage multiplier on perfect parry", 0.5f, "Amount of stamina needed to block if it is perfect parry.");
 
             groundsEnabled = config("Grounds", "Enabled", true, "Enable change of movement speed, run, jump and dodge stamina consumption on different surfaces");
             groundsShowStatusEffect = config("Grounds", "Show status effect", false, "Show status effect of current surface. Status effect will still be shown in Raven menu if disabled.");
@@ -378,250 +384,6 @@ namespace StaminaExtended
             return (GetType().GetField(fieldName).GetValue(this) as ConfigEntry<float>).Value;
         }
 
-        [HarmonyPatch(typeof(Player), nameof(Player.UpdateStats), typeof(float))]
-        public static class Player_UpdateStats_StaminaRegenMultiplier
-        {
-            private static float _m_encumberedStaminaDrain;
-            private static float _m_staminaRegenTimeMultiplier;
-            private static float _m_staminaRegen;
-            private static float _blockStaminaRegen = 0.8f;
-
-
-            [HarmonyPriority(Priority.VeryLow)]
-            public static void Prefix(Player __instance, float dt)
-            {
-                if (!modEnabled.Value)
-                    return;
-
-                if (__instance.InIntro() || __instance.IsTeleporting())
-                    return;
-
-                _m_staminaRegenTimeMultiplier = __instance.m_staminaRegenTimeMultiplier;
-                _m_staminaRegen = __instance.m_staminaRegen;
-
-                if (extraStaminaRegeneration.Value && extraStaminaRegenerationPercent.Value > 0f && extraStaminaRegenerationPoints.Value > 0)
-                    __instance.m_staminaRegen *= 1f + ExtraStamina.GetMultiplier(__instance);
-
-                if (sneakingStamina.Value && __instance.IsSneaking())
-                    __instance.m_staminaRegen *= 1f + sneakingStaminaRegenerationMultiplier.Value * __instance.m_skills.GetSkillFactor(Skills.SkillType.Sneak);
-
-                if (linearRegeneration.Value && 0f < linearRegenerationThreshold.Value && linearRegenerationThreshold.Value < 1f && linearRegenerationMultiplier.Value > 0f && __instance.GetMaxStamina() != 0f)
-                {
-                    if (__instance.GetStaminaPercentage() < linearRegenerationThreshold.Value)
-                    {
-                        float t = Mathf.Clamp01(__instance.GetStamina() / (__instance.GetMaxStamina() * linearRegenerationThreshold.Value));
-                        __instance.m_staminaRegenTimeMultiplier = Mathf.Lerp(linearRegenerationMultiplier.Value, __instance.m_staminaRegenTimeMultiplier, t);
-                    }
-                    else if (__instance.GetStaminaPercentage() > linearRegenerationThreshold.Value)
-                    {
-                        float t = Mathf.Clamp01((__instance.GetMaxStamina() - __instance.GetStamina()) / (__instance.GetMaxStamina() * (1f - linearRegenerationThreshold.Value)));
-                        __instance.m_staminaRegenTimeMultiplier = Mathf.Lerp(1 / linearRegenerationMultiplier.Value, __instance.m_staminaRegenTimeMultiplier, t);
-                    }
-                }
-
-                if (encumberedStamina.Value && __instance.IsEncumbered())
-                {
-                    _m_encumberedStaminaDrain = __instance.m_encumberedStaminaDrain;
-                    __instance.m_encumberedStaminaDrain *= encumberedStaminaDrainMultiplier.Value;
-
-                    if (encumberedStaminaRegeneration.Value && __instance.m_moveDir.magnitude <= 0.1f)
-                        if (__instance.GetStamina() < __instance.GetMaxStamina() && __instance.m_staminaRegenTimer <= 0f)
-                            __instance.m_stamina = Mathf.Min(__instance.GetMaxStamina(), __instance.m_stamina + encumberedStaminaRegenerationMultiplier.Value * __instance.m_staminaRegen * dt * Game.m_staminaRegenRate);
-                }
-            }
-
-            public static void Prefix() => _blockStaminaRegen = blockStaminaRegen.Value;
-
-            [HarmonyTranspiler]
-            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
-            {
-                var codes = new List<CodeInstruction>(instructions);
-
-                MethodInfo isBlockingMethod = AccessTools.Method(typeof(Player), nameof(Player.IsBlocking));
-                FieldInfo customMultiplierField = AccessTools.Field(typeof(Player_UpdateStats_StaminaRegenMultiplier), "_blockStaminaRegen");
-
-                for (int i = 0; i < codes.Count - 1; i++)
-                {
-                    if (codes[i].opcode == OpCodes.Ldc_R4 && (float)codes[i].operand == 0.8f)
-                    {
-                        codes[i] = new CodeInstruction(OpCodes.Ldsfld, customMultiplierField);
-                        break;
-                    }
-                }
-
-                return codes.AsEnumerable();
-            }
-
-            [HarmonyPriority(Priority.VeryHigh)]
-            public static void Postfix(Player __instance)
-            {
-                if (!modEnabled.Value)
-                    return;
-
-                if (__instance.m_staminaRegenTimeMultiplier != _m_staminaRegenTimeMultiplier && _m_staminaRegenTimeMultiplier != 0f)
-                    __instance.m_staminaRegenTimeMultiplier = _m_staminaRegenTimeMultiplier;
-
-                if (__instance.m_encumberedStaminaDrain != _m_encumberedStaminaDrain && _m_encumberedStaminaDrain != 0f)
-                    __instance.m_encumberedStaminaDrain = _m_encumberedStaminaDrain;
-
-                if (__instance.m_staminaRegen != _m_staminaRegen && _m_staminaRegen != 0f)
-                    __instance.m_staminaRegen = _m_staminaRegen;
-            }
-        }
-
-        [HarmonyPatch(typeof(Player), nameof(Player.OnSwimming))]
-        public static class Player_OnSwimming_SwimmingStamina
-        {
-            public static void Prefix(Player __instance, Vector3 targetVel, float dt)
-            {
-                if (!modEnabled.Value)
-                    return;
-
-                if (swimmingStaminaRegeneration.Value && targetVel.magnitude <= 0.1f)
-                {
-                    __instance.m_staminaRegenTimer -= dt;
-                    if (__instance.GetStamina() < __instance.GetMaxStamina() && __instance.m_staminaRegenTimer <= -swimmingStaminaRegenerationDelay.Value)
-                    {
-                        float skillFactor = __instance.m_skills.GetSkillFactor(Skills.SkillType.Swim);
-                        __instance.m_stamina = Mathf.Min(__instance.GetMaxStamina(), __instance.m_stamina + (1f + skillFactor) * swimmingStaminaRegenerationMultiplier.Value * __instance.m_staminaRegen * dt * Game.m_staminaRegenRate);
-                    }
-                }
-            }
-        }
-
-        [HarmonyPatch(typeof(Character), nameof(Character.UpdateSwimming))]
-        public static class Character_UpdateSwimming_SwimmingStamina
-        {
-            private static float _m_swimStaminaDrainMinSkill;
-            private static float _m_swimStaminaDrainMaxSkill;
-            private static float _m_swimSpeed;
-
-            internal static float shiftSwimDownTime;
-            internal static bool shiftSwimStaminaDepleted;
-
-            [HarmonyPriority(Priority.VeryLow)]
-            public static void Prefix(Character __instance, float dt)
-            {
-                if (!modEnabled.Value)
-                    return;
-
-                if (!swimmingStamina.Value)
-                    return;
-
-                if (__instance != Player.m_localPlayer || __instance.IsOnGround())
-                    return;
-
-                _m_swimStaminaDrainMinSkill = Player.m_localPlayer.m_swimStaminaDrainMinSkill;
-                _m_swimStaminaDrainMaxSkill = Player.m_localPlayer.m_swimStaminaDrainMaxSkill;
-                _m_swimSpeed = __instance.m_swimSpeed;
-
-                Player.m_localPlayer.m_swimStaminaDrainMinSkill *= swimmingStaminaDrainMultiplier.Value;
-                Player.m_localPlayer.m_swimStaminaDrainMaxSkill *= swimmingStaminaDrainMultiplier.Value;
-
-                if (!swimmingRun.Value)
-                    return;
-
-                shiftSwimStaminaDepleted = shiftSwimStaminaDepleted || !Player.m_localPlayer.HaveStamina();
-
-                bool run = (ZInput.GetButton("Run") || ZInput.GetButton("JoyRun"));
-                if (run)
-                {
-                    shiftSwimDownTime += dt;
-                    if (!shiftSwimStaminaDepleted)
-                    {
-                        float factor = Math.Abs(Mathf.Min(swimmingRunMaximumSpeed.Value - 1f, shiftSwimDownTime / 10));
-                        __instance.m_swimSpeed *= 1f + factor;
-
-                        Player.m_localPlayer.m_swimStaminaDrainMinSkill *= 1f + factor;
-                        Player.m_localPlayer.m_swimStaminaDrainMaxSkill *= 1f + factor;
-                    }
-                }
-                else
-                {
-                    shiftSwimDownTime = 0f;
-                    shiftSwimStaminaDepleted = false;
-                }
-            }
-
-            [HarmonyPriority(Priority.VeryHigh)]
-            public static void Postfix(Character __instance)
-            {
-                if (!modEnabled.Value)
-                    return;
-
-                if (!swimmingStamina.Value)
-                    return;
-
-                if (__instance != Player.m_localPlayer || __instance.IsOnGround())
-                    return;
-
-                if (Player.m_localPlayer.m_swimSpeed != _m_swimSpeed && _m_swimSpeed != 0f)
-                    Player.m_localPlayer.m_swimSpeed = _m_swimSpeed;
-
-                if (Player.m_localPlayer.m_swimStaminaDrainMinSkill != _m_swimStaminaDrainMinSkill && _m_swimStaminaDrainMinSkill != 0f)
-                    Player.m_localPlayer.m_swimStaminaDrainMinSkill = _m_swimStaminaDrainMinSkill;
-
-                if (Player.m_localPlayer.m_swimStaminaDrainMaxSkill != _m_swimStaminaDrainMaxSkill && _m_swimStaminaDrainMaxSkill != 0f)
-                    Player.m_localPlayer.m_swimStaminaDrainMaxSkill = _m_swimStaminaDrainMaxSkill;
-            }
-        }
-
-        [HarmonyPatch(typeof(Player), nameof(Player.OnSneaking))]
-        public static class Player_OnSneaking_SneakingStamina
-        {
-            private static float _m_sneakStaminaDrain;
-
-            public static bool IsEnemyInRange(Character me)
-            {
-                foreach (BaseAI instance in BaseAI.BaseAIInstances)
-                {
-                    if (!BaseAI.IsEnemy(me, instance.m_character))
-                        continue;
-
-                    if (Vector3.Distance(me.transform.position, instance.transform.position) < Math.Max(instance.m_viewRange, (instance.IsAlerted() ? 1.5f : 1) * sneakingStaminaNoEnemiesRange.Value))
-                        return true;
-                }
-
-                return false;
-            }
-
-            [HarmonyPriority(Priority.VeryLow)]
-            public static void Prefix(Player __instance)
-            {
-                if (!modEnabled.Value)
-                    return;
-
-                if (!sneakingStamina.Value)
-                    return;
-
-                if (__instance != Player.m_localPlayer)
-                    return;
-
-                _m_sneakStaminaDrain = __instance.m_sneakStaminaDrain;
-
-                __instance.m_sneakStaminaDrain *= sneakingStaminaNoEnemies.Value && !IsEnemyInRange(__instance) ? 0f : sneakingStaminaDrainMultiplier.Value;
-
-                if (__instance.m_sneakStaminaDrain == 0)
-                    __instance.m_staminaRegenTimer = __instance.m_staminaRegenDelay;
-            }
-
-            [HarmonyPriority(Priority.VeryHigh)]
-            public static void Postfix(Player __instance)
-            {
-                if (!modEnabled.Value)
-                    return;
-
-                if (!swimmingStamina.Value)
-                    return;
-
-                if (__instance != Player.m_localPlayer)
-                    return;
-
-                if (__instance.m_sneakStaminaDrain != _m_sneakStaminaDrain && _m_sneakStaminaDrain != 0f)
-                    __instance.m_sneakStaminaDrain = _m_sneakStaminaDrain;
-            }
-        }
-
         [HarmonyPatch(typeof(Hud), nameof(Hud.UpdateStamina))]
         public class Hud_UpdateStamina_HideStaminaValue
         {
@@ -631,169 +393,6 @@ namespace StaminaExtended
                     return;
 
                 __instance.m_staminaText.gameObject.SetActive(modEnabled.Value && !hideStaminaValue.Value);
-            }
-        }
-
-        [HarmonyPatch(typeof(FishingFloat), nameof(FishingFloat.Awake))]
-        public static class FishingFloat_Awake_FishingStaminaDrainMultipliers
-        {
-            private static void Postfix(FishingFloat __instance)
-            {
-                if (!modEnabled.Value)
-                    return;
-
-                __instance.m_pullStaminaUse *= pullStaminaUse.Value;
-                __instance.m_hookedStaminaPerSec *= hookedStaminaPerSec.Value;
-
-            }
-        }
-
-        [HarmonyPatch(typeof(SE_Harpooned), nameof(SE_Harpooned.Setup))]
-        public static class SE_Harpooned_Setup_HarpoonedStaminaDrainMultiplier
-        {
-            private static void Postfix(SE_Harpooned __instance)
-            {
-                if (!modEnabled.Value)
-                    return;
-
-                __instance.m_staminaDrain *= harpoonedStaminaDrain.Value;
-
-            }
-        }
-
-        [HarmonyPatch(typeof(Player), nameof(Player.UpdatePlacement))]
-        public static class Player_UpdatePlacement_ToolsStaminaDrainMultiplier
-        {
-            [HarmonyPriority(Priority.VeryLow)]
-            public static void Prefix(Player __instance, bool takeInput, ref float __state)
-            {
-                if (!modEnabled.Value)
-                    return;
-
-                ItemDrop.ItemData rightItem = __instance.GetRightItem();
-                if (__instance.InPlaceMode() && !__instance.IsDead() && takeInput && rightItem != null)
-                {
-                    __state = rightItem.m_shared.m_attack.m_attackStamina;
-                    rightItem.m_shared.m_attack.m_attackStamina *= toolStaminaDrain.Value;
-                }
-            }
-
-            [HarmonyPriority(Priority.VeryHigh)]
-            private static void Postfix(Player __instance, float __state)
-            {
-                if (!modEnabled.Value)
-                    return;
-
-                if (__state != 0f && __instance.GetRightItem() != null)
-                    __instance.GetRightItem().m_shared.m_attack.m_attackStamina = __state;
-            }
-        }
-
-        [HarmonyPatch(typeof(Humanoid), nameof(Humanoid.BlockAttack))]
-        public static class Humanoid_BlockAttack_BlockStaminaDrainMultiplier
-        {
-            [HarmonyPriority(Priority.VeryLow)]
-            public static void Prefix(Humanoid __instance, ref float __state)
-            {
-                if (!modEnabled.Value)
-                    return;
-
-                __state = __instance.m_blockStaminaDrain;
-                __instance.m_blockStaminaDrain *= blockStaminaDrain.Value;
-
-                if (blockStaminaSkill.Value)
-                    __instance.m_blockStaminaDrain *= (1f - 0.33f * __instance.GetSkillFactor(Skills.SkillType.Blocking));
-            }
-
-            [HarmonyPriority(Priority.VeryHigh)]
-            private static void Postfix(Humanoid __instance, float __state)
-            {
-                if (!modEnabled.Value)
-                    return;
-
-                if (__state != 0f)
-                    __instance.m_blockStaminaDrain = __state;
-            }
-        }
-
-        [HarmonyPatch(typeof(Player), nameof(Player.CheckRun))]
-        public static class Player_CheckRun_RunStaminaDrainMultiplier
-        {
-            [HarmonyPriority(Priority.VeryLow)]
-            public static void Prefix(Player __instance, ref float __state)
-            {
-                if (!modEnabled.Value)
-                    return;
-
-                __state = __instance.m_runStaminaDrain;
-                __instance.m_runStaminaDrain *= runStaminaDrain.Value;
-            }
-
-            [HarmonyPriority(Priority.VeryHigh)]
-            private static void Postfix(Player __instance, float __state)
-            {
-                if (!modEnabled.Value)
-                    return;
-
-                if (__state != 0f)
-                    __instance.m_runStaminaDrain = __state;
-            }
-        }
-
-        [HarmonyPatch(typeof(Player), nameof(Player.UpdateDodge))]
-        public static class Player_UpdateDodge_DodgeStaminaDrainMultiplier
-        {
-            [HarmonyPriority(Priority.VeryLow)]
-            public static void Prefix(Player __instance, ref float __state)
-            {
-                if (!modEnabled.Value)
-                    return;
-
-                __state = __instance.m_dodgeStaminaUsage;
-                __instance.m_dodgeStaminaUsage *= dodgeStaminaUsage.Value;
-
-                if (dodgeStaminaSkill.Value)
-                    __instance.m_dodgeStaminaUsage *= (1f - 0.33f * __instance.GetSkillFactor(Skills.SkillType.Jump));
-
-                if (groundsEnabled.Value)
-                    __instance.m_dodgeStaminaUsage *= SE_Surface.GetSurfaceMaterialStaminaDrain(SurfaceStaminaSpeed.currentSurface);
-            }
-
-            [HarmonyPriority(Priority.VeryHigh)]
-            private static void Postfix(Player __instance, float __state)
-            {
-                if (!modEnabled.Value)
-                    return;
-
-                if (__state != 0f)
-                    __instance.m_dodgeStaminaUsage = __state;
-            }
-        }
-
-        [HarmonyPatch(typeof(Player), nameof(Player.OnJump))]
-        public static class Player_OnJump_JumpStaminaDrainMultiplier
-        {
-            [HarmonyPriority(Priority.VeryLow)]
-            public static void Prefix(Player __instance, ref float __state)
-            {
-                if (!modEnabled.Value)
-                    return;
-
-                __state = __instance.m_jumpStaminaUsage;
-                __instance.m_jumpStaminaUsage *= jumpStaminaUsage.Value;
-
-                if (jumpStaminaSkill.Value)
-                    __instance.m_jumpStaminaUsage *= (1f - 0.33f * __instance.GetSkillFactor(Skills.SkillType.Jump));
-            }
-
-            [HarmonyPriority(Priority.VeryHigh)]
-            private static void Postfix(Player __instance, float __state)
-            {
-                if (!modEnabled.Value)
-                    return;
-
-                if (__state != 0f)
-                    __instance.m_jumpStaminaUsage = __state;
             }
         }
     }
