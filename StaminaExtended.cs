@@ -10,7 +10,7 @@ namespace StaminaExtended
     {
         public const string pluginID = "shudnal.StaminaExtended";
         public const string pluginName = "Stamina Extended";
-        public const string pluginVersion = "1.0.7";
+        public const string pluginVersion = "1.0.8";
 
         private readonly Harmony harmony = new Harmony(pluginID);
 

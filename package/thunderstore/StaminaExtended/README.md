@@ -99,6 +99,8 @@ Hide stamina numeric value shown on the bar.
 
 Make stamina needed to Block, Dodge and Jump to be reduced by appropriate skill. 33% at max level to meet behavior of other skills.
 
+Configurable stamina drain on perfect parry.
+
 ## Grounds
 
 Enable detection of current surface your character's feet are touching.

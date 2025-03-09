@@ -1,3 +1,7 @@
+# 1.0.8
+* patch 0.220.3
+* ServerSync updated
+
 # 1.0.7
 * out of combat configurable stamina usage for sneaking, running, jumping and dodging
 * configurable stamina drain on perfect parry
