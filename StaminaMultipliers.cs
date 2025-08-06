@@ -273,7 +273,26 @@ namespace StaminaExtended
                     return;
 
                 __instance.m_pullStaminaUse *= pullStaminaUse.Value;
+                __instance.m_pullStaminaUseMaxSkillMultiplier *= pullStaminaUse.Value;
+
                 __instance.m_hookedStaminaPerSec *= hookedStaminaPerSec.Value;
+                __instance.m_hookedStaminaPerSecMaxSkill *= hookedStaminaPerSec.Value;
+            }
+        }
+
+        [HarmonyPatch(typeof(FishingFloat), nameof(FishingFloat.SetCatch))]
+        public static class FishingFloat_ASetCatch_FishingStaminaDrainMultipliers
+        {
+            private static void Postfix(Fish fish)
+            {
+                if (!modEnabled.Value)
+                    return;
+
+                if (!(bool)fish)
+                    return;
+
+                fish.m_staminaUse *= fishStaminaUse.Value;
+                fish.m_escapeStaminaUse *= fishStaminaUse.Value;
             }
         }
 

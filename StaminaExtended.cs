@@ -10,7 +10,7 @@ namespace StaminaExtended
     {
         public const string pluginID = "shudnal.StaminaExtended";
         public const string pluginName = "Stamina Extended";
-        public const string pluginVersion = "1.0.8";
+        public const string pluginVersion = "1.0.9";
 
         private readonly Harmony harmony = new Harmony(pluginID);
 
@@ -59,6 +59,7 @@ namespace StaminaExtended
 
         public static ConfigEntry<float> pullStaminaUse;
         public static ConfigEntry<float> hookedStaminaPerSec;
+        public static ConfigEntry<float> fishStaminaUse;
         public static ConfigEntry<float> harpoonedStaminaDrain;
         public static ConfigEntry<float> toolStaminaDrain;
         public static ConfigEntry<float> blockStaminaDrain;
@@ -245,6 +246,7 @@ namespace StaminaExtended
 
             pullStaminaUse = config("8 - Various multipliers", "Fishing pull stamina", 1f, "Stamina required to reel");
             hookedStaminaPerSec = config("8 - Various multipliers", "Fishing hooked stamina", 1f, "Stamina required to keep a fish on the line");
+            fishStaminaUse = config("8 - Various multipliers", "Fishing escape stamina use", 1f, "Stamina required to fight fish trying to escape");
             harpoonedStaminaDrain = config("8 - Various multipliers", "Harpooned pull stamina", 1f, "Stamina required to pull harpooned target");
             toolStaminaDrain = config("8 - Various multipliers", "Tools stamina drain", 1f, "Stamina required to use tools such as hammer, hoe, cultivator");
             blockStaminaDrain = config("8 - Various multipliers", "Block stamina drain", 1f, "Stamina required to block");

@@ -1,3 +1,7 @@
+# 1.0.9
+* fixed fishing pull and hooking stamina usage multipliers
+* added new fish escape stamina usage (stamina required to fight fish trying to escape)
+
 # 1.0.8
 * patch 0.220.3
 * ServerSync updated
