@@ -96,9 +96,7 @@ namespace StaminaExtended
                 {
                     if (code.LoadsField(staminaRegenField))
                         break;
-                    if (code.Calls(isBlockingMethod))
-                        inBlockingCheck = true;
-                    if (inBlockingCheck && code.opcode == OpCodes.Ldc_R4 && code.operand is float value && value == 0.8f)
+                    if (code.opcode == OpCodes.Ldc_R4 && code.operand is float value && value == 0.8f)
                     {
                         // Mutate the existing instruction to retain its branch labels and exception blocks.
                         code.opcode = OpCodes.Call;
