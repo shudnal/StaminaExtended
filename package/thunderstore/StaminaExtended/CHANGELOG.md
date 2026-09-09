@@ -1,3 +1,14 @@
+# 1.0.10
+* Updated for the Valheim 1.0.7 release.
+* Completed the migration to the standalone ConditionalConfigSync dependency.
+* Updated required dependencies to BepInExPack Valheim 5.4.2350 and ConditionalConfigSync 1.0.5.
+* Apply snow surface settings to deep and very deep snow.
+* Add configurable ice surface modifiers and recognize ice building materials.
+* Clear stale surface modifiers when moving onto an unrecognized surface.
+* Fixed per-call restoration of temporary regeneration, swimming and sneaking parameters, including exceptional exits.
+* Fixed sneaking drain restoration depending on the unrelated swimming setting.
+* Restored vanilla blocking regeneration when the mod is disabled.
+
 # 1.0.9
 * fixed fishing pull and hooking stamina usage multipliers
 * added new fish escape stamina usage (stamina required to fight fish trying to escape)

@@ -111,6 +111,7 @@ namespace StaminaExtended
             Paved,
             Ash,
             Lava,
+            Ice,
         }
 
         public static SurfaceMaterial currentSurface = SurfaceMaterial.None;
@@ -205,6 +206,9 @@ namespace StaminaExtended
             if (currentSurface != SurfaceMaterial.None)
                 return;
 
+            if (pieceLayer == 0)
+                pieceLayer = LayerMask.NameToLayer("piece");
+
             if (collider.gameObject.layer != pieceLayer)
                 return;
 
@@ -224,6 +228,7 @@ namespace StaminaExtended
                 MaterialType.Iron => SurfaceMaterial.Metal,
                 MaterialType.Ashstone => SurfaceMaterial.Marble,
                 MaterialType.Ancient => SurfaceMaterial.Marble,
+                MaterialType.Ice => SurfaceMaterial.Ice,
                 _ => SurfaceMaterial.None
             };
         }
@@ -260,7 +265,12 @@ namespace StaminaExtended
                         currentSurface = SurfaceMaterial.Lava;
                         return;
                     case GroundMaterial.Snow:
+                    case GroundMaterial.SnowDeep:
+                    case GroundMaterial.SnowVeryDeep:
                         currentSurface = SurfaceMaterial.Snow;
+                        return;
+                    case GroundMaterial.Ice:
+                        currentSurface = SurfaceMaterial.Ice;
                         return;
                     case GroundMaterial.Mud:
                         currentSurface = GetModifiedGround(collider, point);
@@ -288,8 +298,7 @@ namespace StaminaExtended
                         return;
                     case GroundMaterial.Default:
                         WearNTear componentInParent = GetPiece(collider);
-                        if (componentInParent != null)
-                            currentSurface = GetSurfaceMaterial(componentInParent.m_materialType);
+                        currentSurface = componentInParent != null ? GetSurfaceMaterial(componentInParent.m_materialType) : SurfaceMaterial.None;
                         return;
                 }
 

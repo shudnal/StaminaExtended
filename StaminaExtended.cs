@@ -1,16 +1,17 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
 using HarmonyLib;
-using ServerSync;
+using ConditionalConfigSync;
 
 namespace StaminaExtended
 {
     [BepInPlugin(pluginID, pluginName, pluginVersion)]
+    [BepInDependency("_shudnal.ConditionalConfigSync", "1.0.5")]
     public class StaminaExtended : BaseUnityPlugin
     {
         public const string pluginID = "shudnal.StaminaExtended";
         public const string pluginName = "Stamina Extended";
-        public const string pluginVersion = "1.0.9";
+        public const string pluginVersion = "1.0.10";
 
         private readonly Harmony harmony = new Harmony(pluginID);
 
@@ -161,6 +162,12 @@ namespace StaminaExtended
         public static ConfigEntry<float> groundsStaminaRegenLava;
         public static ConfigEntry<string> groundsNameLava;
 
+        public static ConfigEntry<float> groundsSpeedIce;
+        public static ConfigEntry<float> groundsJumpIce;
+        public static ConfigEntry<float> groundsStaminaDrainIce;
+        public static ConfigEntry<float> groundsStaminaRegenIce;
+        public static ConfigEntry<string> groundsNameIce;
+
         public static StaminaExtended instance;
 
         public const string statusEffectSurfaceName = "Surface";
@@ -197,7 +204,6 @@ namespace StaminaExtended
 
         private void ConfigInit()
         {
-            config("1 - General", "NexusID", 2719, "Nexus mod ID for updates", false);
 
             modEnabled = config("1 - General", "Enabled", true, "Mod alters stamina behavior");
             configLocked = config("1 - General", "Lock Configuration", defaultValue: true, "Configuration is locked and can be changed by server admins only.");
@@ -350,14 +356,19 @@ namespace StaminaExtended
             groundsStaminaDrainLava = config("Grounds - Lava", "Stamina drain multiplier", 1f, "Stamina drain multiplier (lava in Ashlands)");
             groundsStaminaRegenLava = config("Grounds - Lava", "Stamina regen multiplier", 1f, "Stamina regen multiplier (lava in Ashlands)");
             groundsNameLava = config("Grounds - Lava", "Status effect name", "Lava", "Localized name for status effect (lava in Ashlands)");
+
+            groundsSpeedIce = config("Grounds - Ice", "Speed multiplier", 1f, "Movement speed multiplier on ice");
+            groundsJumpIce = config("Grounds - Ice", "Jump multiplier", 1f, "Jump height multiplier on ice");
+            groundsStaminaDrainIce = config("Grounds - Ice", "Stamina drain multiplier", 1f, "Stamina drain multiplier on ice");
+            groundsStaminaRegenIce = config("Grounds - Ice", "Stamina regen multiplier", 1f, "Stamina regen multiplier on ice");
+            groundsNameIce = config("Grounds - Ice", "Status effect name", "Ice", "Localized name for the ice status effect");
         }
 
         ConfigEntry<T> config<T>(string group, string name, T defaultValue, ConfigDescription description, bool synchronizedSetting = true)
         {
             ConfigEntry<T> configEntry = Config.Bind(group, name, defaultValue, description);
 
-            SyncedConfigEntry<T> syncedConfigEntry = configSync.AddConfigEntry(configEntry);
-            syncedConfigEntry.SynchronizedConfig = synchronizedSetting;
+            configSync.AddConfigEntry(configEntry, ConfigSyncMode.Conditional, serverControlledByDefault: synchronizedSetting);
 
             return configEntry;
         }
