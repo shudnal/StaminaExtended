@@ -13,13 +13,13 @@ namespace StaminaExtended
     {
         private static bool IsOutOfCombat() => Player.m_localPlayer != null && !Player.m_localPlayer.IsSensed() && !Player.m_localPlayer.IsTargeted() && Player.m_localPlayer.CanSwitchPVP();
 
-        private static float GetSneakStaminaDrainMultiplier() => Math.Max(IsOutOfCombat() ? sneakingStaminaUsageOutOfCombat.Value : sneakingStaminaDrainMultiplier.Value, 0.01f);
+        private static float GetSneakStaminaDrainMultiplier() => Math.Max(sneakingStaminaDrainMultiplier.Value == sneakingStaminaUsageOutOfCombat.Value || !IsOutOfCombat() ? sneakingStaminaDrainMultiplier.Value : sneakingStaminaUsageOutOfCombat.Value, 0.01f);
 
-        private static float GetRunStaminaDrainMultiplier() => Math.Max(IsOutOfCombat() ? runStaminaDrainOutOfCombat.Value : runStaminaDrain.Value, 0.01f);
+        private static float GetRunStaminaDrainMultiplier() => Math.Max(runStaminaDrain.Value == runStaminaDrainOutOfCombat.Value || !IsOutOfCombat() ? runStaminaDrain.Value : runStaminaDrainOutOfCombat.Value, 0.01f);
 
-        private static float GetDodgeStaminaDrainMultiplier() => Math.Max(IsOutOfCombat() ? dodgeStaminaUsageOutOfCombat.Value : dodgeStaminaUsage.Value, 0.01f);
+        private static float GetDodgeStaminaDrainMultiplier() => Math.Max(dodgeStaminaUsage.Value == dodgeStaminaUsageOutOfCombat.Value || !IsOutOfCombat() ? dodgeStaminaUsage.Value : dodgeStaminaUsageOutOfCombat.Value, 0.01f);
 
-        private static float GetJumpStaminaDrainMultiplier() => Math.Max(IsOutOfCombat() ? jumpStaminaUsageOutOfCombat.Value : jumpStaminaUsage.Value, 0.01f);
+        private static float GetJumpStaminaDrainMultiplier() => Math.Max(jumpStaminaUsage.Value == jumpStaminaUsageOutOfCombat.Value || !IsOutOfCombat() ? jumpStaminaUsage.Value : jumpStaminaUsageOutOfCombat.Value, 0.01f);
 
         [HarmonyPatch(typeof(Player), nameof(Player.UpdateStats), typeof(float))]
         public static class Player_UpdateStats_StaminaRegenMultiplier
@@ -58,17 +58,19 @@ namespace StaminaExtended
                 if (sneakingStamina.Value && __instance.IsSneaking())
                     __instance.m_staminaRegen *= 1f + sneakingStaminaRegenerationMultiplier.Value * ExtraStamina.GetSkillFactor(__instance, Skills.SkillType.Sneak);
 
-                if (linearRegeneration.Value && 0f < linearRegenerationThreshold.Value && linearRegenerationThreshold.Value < 1f && linearRegenerationMultiplier.Value > 0f && __instance.GetMaxStamina() != 0f)
+                float threshold = linearRegenerationThreshold.Value;
+                float multiplier = linearRegenerationMultiplier.Value;
+                if (linearRegeneration.Value && threshold > 0f && threshold < 1f && multiplier > 0f)
                 {
-                    if (__instance.GetStaminaPercentage() < linearRegenerationThreshold.Value)
+                    float maximum = __instance.GetMaxStamina();
+                    if (maximum != 0f)
                     {
-                        float t = Mathf.Clamp01(__instance.GetStamina() / (__instance.GetMaxStamina() * linearRegenerationThreshold.Value));
-                        __instance.m_staminaRegenTimeMultiplier = Mathf.Lerp(linearRegenerationMultiplier.Value, __instance.m_staminaRegenTimeMultiplier, t);
-                    }
-                    else if (__instance.GetStaminaPercentage() > linearRegenerationThreshold.Value)
-                    {
-                        float t = Mathf.Clamp01((__instance.GetMaxStamina() - __instance.GetStamina()) / (__instance.GetMaxStamina() * (1f - linearRegenerationThreshold.Value)));
-                        __instance.m_staminaRegenTimeMultiplier = Mathf.Lerp(1 / linearRegenerationMultiplier.Value, __instance.m_staminaRegenTimeMultiplier, t);
+                        float percentage = __instance.GetStaminaPercentage();
+                        float fraction = __instance.GetStamina() / maximum;
+                        if (percentage < threshold)
+                            __instance.m_staminaRegenTimeMultiplier = Mathf.Lerp(multiplier, __instance.m_staminaRegenTimeMultiplier, Mathf.Clamp01(fraction / threshold));
+                        else if (percentage > threshold)
+                            __instance.m_staminaRegenTimeMultiplier = Mathf.Lerp(1f / multiplier, __instance.m_staminaRegenTimeMultiplier, Mathf.Clamp01((1f - fraction) / (1f - threshold)));
                     }
                 }
 
@@ -76,9 +78,12 @@ namespace StaminaExtended
                 {
                     __instance.m_encumberedStaminaDrain *= encumberedStaminaDrainMultiplier.Value;
 
-                    if (encumberedStaminaRegeneration.Value && __instance.m_moveDir.magnitude <= 0.1f)
-                        if (__instance.GetStamina() < __instance.GetMaxStamina() && __instance.m_staminaRegenTimer <= 0f)
-                            __instance.m_stamina = Mathf.Min(__instance.GetMaxStamina(), __instance.m_stamina + encumberedStaminaRegenerationMultiplier.Value * __instance.m_staminaRegen * dt * Game.m_staminaRegenRate);
+                    if (encumberedStaminaRegeneration.Value && __instance.m_moveDir.magnitude <= 0.1f && __instance.m_staminaRegenTimer <= 0f)
+                    {
+                        float maximum = __instance.GetMaxStamina();
+                        if (__instance.GetStamina() < maximum)
+                            __instance.m_stamina = Mathf.Min(maximum, __instance.m_stamina + encumberedStaminaRegenerationMultiplier.Value * __instance.m_staminaRegen * dt * Game.m_staminaRegenRate);
+                    }
                 }
             }
 
@@ -86,10 +91,8 @@ namespace StaminaExtended
             public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
             {
                 var codes = new List<CodeInstruction>(instructions);
-                MethodInfo isBlockingMethod = AccessTools.Method(typeof(Player), nameof(Player.IsBlocking));
                 MethodInfo multiplierMethod = AccessTools.Method(typeof(Player_UpdateStats_StaminaRegenMultiplier), nameof(GetBlockRegenMultiplier));
                 FieldInfo staminaRegenField = AccessTools.Field(typeof(Player), nameof(Player.m_staminaRegen));
-                bool inBlockingCheck = false;
 
                 // The first blocking check precedes stamina regeneration; the later one belongs to eitr.
                 foreach (CodeInstruction code in codes)
@@ -420,29 +423,36 @@ namespace StaminaExtended
         public static class Player_UpdateDodge_DodgeStaminaDrainMultiplier
         {
             [HarmonyPriority(Priority.VeryLow)]
-            public static void Prefix(Player __instance, ref float __state)
+            public static void Prefix(Player __instance, float dt, out float? __state)
             {
-                if (!modEnabled.Value)
+                __state = null;
+                // Vanilla reads the dodge cost only while the queued timer remains positive
+                // after subtracting dt. Do not evaluate combat, skills or surfaces while idle.
+                if (!modEnabled.Value || __instance.m_queuedDodgeTimer <= dt)
                     return;
 
                 __state = __instance.m_dodgeStaminaUsage;
                 __instance.m_dodgeStaminaUsage *= GetDodgeStaminaDrainMultiplier();
 
                 if (dodgeStaminaSkill.Value)
-                    __instance.m_dodgeStaminaUsage *= (1f - 0.33f * ExtraStamina.GetSkillFactor(__instance, Skills.SkillType.Jump));
+                    __instance.m_dodgeStaminaUsage *= 1f - 0.33f * ExtraStamina.GetSkillFactor(__instance, Skills.SkillType.Jump);
 
                 if (groundsEnabled.Value)
                     __instance.m_dodgeStaminaUsage *= SE_Surface.GetSurfaceMaterialStaminaDrain(SurfaceStaminaSpeed.currentSurface);
             }
 
             [HarmonyPriority(Priority.VeryHigh)]
-            private static void Postfix(Player __instance, float __state)
+            private static void Postfix(Player __instance, ref float? __state) => Restore(__instance, ref __state);
+
+            private static void Finalizer(Player __instance, ref float? __state) => Restore(__instance, ref __state);
+
+            private static void Restore(Player player, ref float? state)
             {
-                if (!modEnabled.Value)
+                if (!state.HasValue)
                     return;
 
-                if (__state != 0f)
-                    __instance.m_dodgeStaminaUsage = __state;
+                player.m_dodgeStaminaUsage = state.Value;
+                state = null;
             }
         }
 

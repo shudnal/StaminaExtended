@@ -1,3 +1,9 @@
+# 1.0.11
+* Avoided dodge modifier calculations when no dodge can start and skipped combat-state queries when both configured multipliers match.
+* Reduced repeated regeneration getter calls and unused maximum-stamina queries.
+* Restored temporary dodge and food-derived base-stamina values even after exceptions or live configuration changes.
+* Fixed extra regeneration tooltip text not being inserted before the following line.
+
 # 1.0.10
 * Updated for the Valheim 1.0.7 release.
 * Completed the migration to the standalone ConditionalConfigSync dependency.

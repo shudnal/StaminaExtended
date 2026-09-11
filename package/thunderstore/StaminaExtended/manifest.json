@@ -1,6 +1,6 @@
 {
   "name": "StaminaExtended",
-  "version_number": "1.0.10",
+  "version_number": "1.0.11",
   "website_url": "https://github.com/shudnal/StaminaExtended",
   "description": "Control various stamina aspects. Linear regeneration rate change, more regen from extra stamina. Encumbered, swim, sneaking tweaks. Surface dependent stamina usage and movement speed.",
   "dependencies": [

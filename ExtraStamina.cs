@@ -9,9 +9,11 @@ namespace StaminaExtended
     {
         public static float GetMultiplier(Player player)
         {
-            float maxStam = player.GetMaxStamina();
+            float maxStam;
             if (extraStaminaRegenerationOnlyFood.Value)
                 player.GetTotalFoodValue(out _, out maxStam, out _);
+            else
+                maxStam = player.GetMaxStamina();
 
             return GetStaminaRegenerationValueFromStaminaPoints(maxStam - player.m_baseStamina - GetAdditionalBaseStamina(player));
         }
@@ -56,8 +58,9 @@ namespace StaminaExtended
         public static class Player_GetTotalFoodValue_BaseStaminaIncrease
         {
             [HarmonyPriority(Priority.VeryLow)]
-            public static void Prefix(Player __instance, ref float __state)
+            public static void Prefix(Player __instance, out float? __state)
             {
+                __state = null;
                 if (!modEnabled.Value)
                     return;
 
@@ -73,13 +76,15 @@ namespace StaminaExtended
             }
 
             [HarmonyPriority(Priority.VeryHigh)]
-            public static void Postfix(Player __instance, float __state)
-            {
-                if (!modEnabled.Value)
-                    return;
+            public static void Postfix(Player __instance, ref float? __state) => Restore(__instance, ref __state);
+            private static void Finalizer(Player __instance, ref float? __state) => Restore(__instance, ref __state);
 
-                if (__state != 0)
-                    __instance.m_baseStamina = __state;
+            private static void Restore(Player player, ref float? state)
+            {
+                if (!state.HasValue)
+                    return;
+                player.m_baseStamina = state.Value;
+                state = null;
             }
         }
 
@@ -115,7 +120,7 @@ namespace StaminaExtended
 
                 int i = __result.IndexOf("\n", index, StringComparison.InvariantCulture);
                 if (i != -1)
-                    __result.Insert(i, tooltip);
+                    __result = __result.Insert(i, tooltip);
                 else
                     __result += tooltip;
             }
