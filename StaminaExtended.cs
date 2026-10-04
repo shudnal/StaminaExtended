@@ -229,7 +229,7 @@ namespace StaminaExtended
 
             swimmingStamina = config("5 - Swimming stamina", "Enabled", true, "Enable swimming stamina control");
             swimmingStaminaDrainMultiplier = config("5 - Swimming stamina", "Stamina drain multiplier", 1f, "Swimming stamina drain multiplier. Set 0 to disable stamina usage while swimming");
-            swimmingStaminaRegeneration = config("5 - Swimming stamina", "Stamina regeneration while swimming", true, "Stamina will regenerate while encumbered");
+            swimmingStaminaRegeneration = config("5 - Swimming stamina", "Stamina regeneration while swimming", true, "Stamina will regenerate while swimming");
             swimmingStaminaRegenerationMultiplier = config("5 - Swimming stamina", "Stamina regeneration multiplier", 0.2f, "Stamina regeneration multiplier of normal stamina regeneration rate");
             swimmingStaminaRegenerationDelay = config("5 - Swimming stamina", "Stamina regeneration delay", 2f, "Additional delay in seconds before stamina begins to regenerate while not moving");
             swimmingRun = config("5 - Swimming stamina", "Swimming acceleration", true, "Press Run hotkey to swim faster depleting proportionally more stamina. Swimming speed will gradually increase until maximum speed is reached.");
@@ -267,7 +267,7 @@ namespace StaminaExtended
 
             hideStaminaValue = config("9 - Misc", "Hide stamina text", false, "Hide stamina text value on stamina bar");
             blockStaminaSkill = config("9 - Misc", "Block stamina usage depends on skill", true, "Amount of stamina needed to block is reduced by 33% when Block skill is 100");
-            dodgeStaminaSkill = config("9 - Misc", "Dodge stamina usage depends on Jump skill", true, "Amount of stamina needed to dodge is reduced by 33% when Dodge skill is 100");
+            dodgeStaminaSkill = config("9 - Misc", "Dodge stamina usage depends on Jump skill", true, "Amount of stamina needed to dodge is reduced by 33% when Jump skill is 100");
             jumpStaminaSkill = config("9 - Misc", "Jump stamina usage depends on Jump skill", true, "Amount of stamina needed to jump is reduced by 33% when Jump skill is 100");
             blockStaminaRegen = config("9 - Misc", "Stamina regen multiplier while blocking", 0.8f, "Stamina regeneration rate while holding block");
             perfectParryStaminaDrain = config("9 - Misc", "Stamina usage multiplier on perfect parry", 0.5f, "Amount of stamina needed to block if it is perfect parry.");
